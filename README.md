@@ -23,7 +23,49 @@ Depending on the username and password you will receive the appropriate message 
 ### Next include Docker: 
 Next, to include docker into the project, build your Docker image to include the updated dependencies. You can do this by running the `docker-compose build` command. After that run `docker-compose up` to create new containers and images inside the docker desktop app. 
 
-Inside the Docker Desktop you can see the following:  
+Inside the Docker Desktop you can see the following: 
+
+![GitHub Logo](assets/Docker.png)
+
+### Validate 
+Once APISIX is running on Docker, you can use curl to send a request to see if APISIX is working properly: 
+##### `curl-I "http://127.0.0.1:9080" | grep Server` 
+If everything is ok, you will get the following response:
+Server:APISIX/3.3.0.   
+APISIX is now installed and running
+
+##### Once APISIX is running and all the Docker instructions are done configure routes to execute forward-authentication logic, run this command:
+``` 
+curl -I "http://127.0.0.1:9180/apisix/admin/routes/nodejs" -H 'X-API-KEY: edd1c9f034335f136f87ad84b625c8f1'-X PUT -d
+{
+  "uri": "/auth",
+     "upstream": {
+      "type": "roundrobin",
+      "nodes": {
+        "localhost:80": 1
+	} }
+}'
+```
+You will receive an HTTP/1.1 201 OK response, if the route was created successfully.  
+##### Next, you create the plugin using this curl command: 
+```
+curl http://127.0.0.1:9180/apisix/admin/routes/nodejs -H 'X-API-KEY: edd1c9f034335f136f87ad84b625c8f1' -X PUT -d '
+{ 
+    "plugins": {
+        "forward-auth": {
+           "uri":"http:localhost:80/auth",
+             "address": "http://127.0.0.1:9080/auth",
+              "request_headers": ["username", "password"], 
+              "upstream_headers": ["X-User-ID"],
+             "client_headers": ["Location"]
+
+}  },   "uri": "/auth"}'
+
+```
+After running this Curl command you are able to see the following. 
+
+
+
 
  
 
